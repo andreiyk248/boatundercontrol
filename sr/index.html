@@ -329,6 +329,16 @@
   textarea{ resize:vertical; min-height:90px; }
   @media (max-width:520px){ .qform-grid{ grid-template-columns:1fr; } }
 
+  .qform-phone-row{ display:flex; gap:8px; }
+  .qform-phone-row select{ flex:0 0 132px; min-width:0; }
+  .qform-phone-row input{ flex:1 1 auto; min-width:0; }
+  .qform-hint{ font-size:12px; color:var(--ink-soft); margin-top:6px; }
+  .qform-msg{ margin-top:14px; padding:11px 13px; border-radius:8px; font-size:13.5px; font-weight:600; display:none; }
+  .qform-msg.show{ display:block; }
+  .qform-msg.ok{ background:#e7f6ec; color:#1e7a3c; }
+  .qform-msg.err{ background:#fdeceb; color:#b3261e; }
+  .qform button[disabled]{ opacity:.6; cursor:not-allowed; }
+
   [hidden]{ display:none !important; }
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; animation:none !important; } }
 </style>
@@ -616,11 +626,22 @@
             <form id="quoteForm">
               <div class="qform-grid">
                 <div><label data-i18n="contact.fName">Ime</label><input type="text" id="fName" required=""></div>
-                <div><label data-i18n="contact.fEmail">E-pošta</label><input type="email" id="fEmail" required=""></div>
+                <div><label data-i18n="contact.fEmail">E-pošta</label><input type="email" id="fEmail"></div>
+                <div class="full">
+                  <label data-i18n="contact.fPhone">Phone</label>
+                  <div class="qform-phone-row">
+                    <select id="fPhoneCode" aria-label="Country code"></select>
+                    <input type="tel" id="fPhone" inputmode="tel" autocomplete="tel-national">
+                  </div>
+                </div>
+                <div class="full"><p class="qform-hint" data-i18n="contact.fContactHint">Please provide an email or a phone number.</p></div>
                 <div class="full"><label data-i18n="contact.fBoat">Podaci o brodu (dužina, tip, vez)</label><input type="text" id="fBoat"></div>
                 <div class="full"><label data-i18n="contact.fService">Potrebna usluga</label><select id="fService"><option value="Paket nadzora broda">Paket nadzora broda</option><option value="Međunarodni transport">Međunarodni transport</option><option value="Registracija broda / skutera">Registracija broda / skutera</option><option value="Ostalo">Ostalo</option></select></div>
                 <div class="full"><label data-i18n="contact.fMessage">Poruka</label><textarea id="fMessage"></textarea></div>
-                <div class="full"><button type="submit" class="btn btn-gold" data-i18n="contact.fSubmit">Pošaljite putem e-pošte</button></div>
+                <div class="full">
+                  <button type="submit" class="btn btn-gold" id="fSubmitBtn" data-i18n="contact.fSubmit">Send message</button>
+                  <div class="qform-msg" id="fMsg" role="status" aria-live="polite"></div>
+                </div>
               </div>
             </form>
           </div>
@@ -782,7 +803,7 @@
         eyebrow:"Get in touch", h2:"Tell us about your boat", sub:"We'll reply with a plan and a price.",
         emailSub:"Write to us", areaSub:"Montenegro", whatsappSub:"Chat on WhatsApp",
         chip1:"Reliable, hands-on local team", chip2:"Working the coast: Herceg Novi – Budva", chip3:"24/7 cabinet access",
-        fName:"Name", fEmail:"Email", fBoat:"Boat details (length, type, berth)", fService:"Service needed", fMessage:"Message", fSubmit:"Send via email",
+        fName:"Name", fEmail:"Email", fPhone:"Phone", fContactHint:"Please provide an email or a phone number.", fBoat:"Boat details (length, type, berth)", fService:"Service needed", fMessage:"Message", fSubmit:"Send message", fSending:"Sending...", fOk:"Thank you! Your message has been sent — we'll be in touch shortly.", fErr:"Something went wrong. Please try again, or contact us by phone or WhatsApp.", fValidation:"Please enter your name and either an email address or a phone number.",
         serviceOptions:["Boat watch package","International transport","Boat / jet ski registration","Other"]
       },
       footer: { tag:"Boat watch, logistics and registration services along the Montenegrin coast." }
@@ -912,7 +933,7 @@
         eyebrow:"Kontakt", h2:"Recite nam o vašem brodu", sub:"Odgovorićemo sa planom i cenom.",
         emailSub:"Pišite nam", areaSub:"Crna Gora", whatsappSub:"Pišite na WhatsApp",
         chip1:"Pouzdan tim na terenu", chip2:"Radimo na obali: Herceg Novi – Budva", chip3:"Pristup nalogu 24/7",
-        fName:"Ime", fEmail:"E-pošta", fBoat:"Podaci o brodu (dužina, tip, vez)", fService:"Potrebna usluga", fMessage:"Poruka", fSubmit:"Pošaljite putem e-pošte",
+        fName:"Ime", fEmail:"E-pošta", fPhone:"Telefon", fContactHint:"Unesite email ili broj telefona.", fBoat:"Podaci o brodu (dužina, tip, vez)", fService:"Potrebna usluga", fMessage:"Poruka", fSubmit:"Pošaljite poruku", fSending:"Slanje...", fOk:"Hvala! Vaša poruka je poslata — javićemo vam se uskoro.", fErr:"Došlo je do greške. Pokušajte ponovo ili nas kontaktirajte telefonom ili na WhatsApp.", fValidation:"Unesite ime i email adresu ili broj telefona.",
         serviceOptions:["Paket nadzora broda","Međunarodni transport","Registracija broda / skutera","Ostalo"]
       },
       footer: { tag:"Nadzor broda, logistika i registracija na crnogorskoj obali." }
@@ -1042,7 +1063,7 @@
         eyebrow:"Связаться с нами", h2:"Расскажите о своей лодке", sub:"Мы ответим планом и ценой.",
         emailSub:"Написать нам", areaSub:"Черногория", whatsappSub:"Написать в WhatsApp",
         chip1:"Надёжная локальная команда", chip2:"Работаем на побережье: Херцег-Нови – Будва", chip3:"Доступ к кабинету 24/7",
-        fName:"Имя", fEmail:"Email", fBoat:"Данные лодки (длина, тип, стоянка)", fService:"Нужная услуга", fMessage:"Сообщение", fSubmit:"Отправить по email",
+        fName:"Имя", fEmail:"Email", fPhone:"Телефон", fContactHint:"Укажите email или номер телефона.", fBoat:"Данные лодки (длина, тип, стоянка)", fService:"Нужная услуга", fMessage:"Сообщение", fSubmit:"Отправить сообщение", fSending:"Отправка...", fOk:"Спасибо! Ваше сообщение отправлено — мы скоро с вами свяжемся.", fErr:"Что-то пошло не так. Попробуйте ещё раз или свяжитесь с нами по телефону или в WhatsApp.", fValidation:"Укажите имя и email или номер телефона.",
         serviceOptions:["Присмотр за лодкой","Международная перевозка","Регистрация лодки / гидроцикла","Другое"]
       },
       footer: { tag:"Присмотр за лодками, логистика и регистрация на черногорском побережье." }
@@ -1273,25 +1294,91 @@
     a.addEventListener("click", function(){ mobileNav.setAttribute("data-open","false"); });
   });
 
+  var CONTACT_ENDPOINT = "https://script.google.com/macros/s/AKfycbx9k5XIQg-QnwB7X6-x0udcGhoRIBOuv5DjeYOYBvtxR-fxBY0LD6nOnWg-X5TcbWDK/exec";
+  var PHONE_CODES = [
+    ["+382","Montenegro"],["+381","Serbia"],["+387","Bosnia and Herzegovina"],["+385","Croatia"],
+    ["+386","Slovenia"],["+389","North Macedonia"],["+355","Albania"],["+383","Kosovo"],
+    ["+30","Greece"],["+39","Italy"],["+43","Austria"],["+49","Germany"],["+41","Switzerland"],
+    ["+33","France"],["+34","Spain"],["+351","Portugal"],["+44","United Kingdom"],["+353","Ireland"],
+    ["+31","Netherlands"],["+32","Belgium"],["+352","Luxembourg"],["+48","Poland"],["+420","Czechia"],
+    ["+421","Slovakia"],["+36","Hungary"],["+40","Romania"],["+359","Bulgaria"],["+380","Ukraine"],
+    ["+375","Belarus"],["+373","Moldova"],["+7","Russia"],["+90","Turkey"],["+357","Cyprus"],
+    ["+356","Malta"],["+377","Monaco"],["+378","San Marino"],["+46","Sweden"],["+47","Norway"],
+    ["+45","Denmark"],["+358","Finland"],["+354","Iceland"],["+372","Estonia"],["+371","Latvia"],
+    ["+370","Lithuania"],["+995","Georgia"],["+374","Armenia"],["+994","Azerbaijan"],["+1","USA / Canada"],
+    ["+971","UAE"],["+966","Saudi Arabia"],["+972","Israel"],["+86","China"],["+81","Japan"],
+    ["+82","South Korea"],["+91","India"],["+61","Australia"],["+64","New Zealand"],["+55","Brazil"],
+    ["+52","Mexico"],["+27","South Africa"]
+  ];
+  (function populatePhoneCodes(){
+    var sel = document.getElementById("fPhoneCode");
+    PHONE_CODES.forEach(function(c){
+      var opt = document.createElement("option");
+      opt.value = c[0];
+      opt.textContent = c[1] + " (" + c[0] + ")";
+      if(c[1] === "Montenegro"){ opt.selected = true; }
+      sel.appendChild(opt);
+    });
+  })();
+
   document.getElementById("quoteForm").addEventListener("submit", function(ev){
     ev.preventDefault();
-    var name = document.getElementById("fName").value;
-    var email = document.getElementById("fEmail").value;
-    var boat = document.getElementById("fBoat").value;
+    var t = I18N[PAGE_LANG].contact;
+    var name = document.getElementById("fName").value.trim();
+    var email = document.getElementById("fEmail").value.trim();
+    var phoneNum = document.getElementById("fPhone").value.trim();
+    var phoneCode = document.getElementById("fPhoneCode").value;
+    var phone = phoneNum ? (phoneCode + " " + phoneNum) : "";
+    var boat = document.getElementById("fBoat").value.trim();
     var service = document.getElementById("fService").value;
-    var message = document.getElementById("fMessage").value;
-    var subject = encodeURIComponent("Boat Under Control — " + service + " (" + name + ")");
-    var bodyLines = [
-      "Name: " + name,
-      "Email: " + email,
-      "Boat: " + boat,
-      "Service: " + service,
-      "",
-      message
-    ];
-    var body = encodeURIComponent(bodyLines.join("\n"));
-    if(window.gtag){ gtag('event', 'ads_conversion_submit_lead_form'); }
-    window.location.href = "mailto:info@boatcare24.com?subject=" + subject + "&body=" + body;
+    var message = document.getElementById("fMessage").value.trim();
+    var msgEl = document.getElementById("fMsg");
+    var btn = document.getElementById("fSubmitBtn");
+
+    msgEl.className = "qform-msg";
+    msgEl.textContent = "";
+
+    if(!name || (!email && !phoneNum)){
+      msgEl.textContent = t.fValidation;
+      msgEl.className = "qform-msg show err";
+      return;
+    }
+
+    var payload = {
+      Name: name,
+      Email: email,
+      Phone: phone,
+      "Boat details": boat,
+      Service: service,
+      Message: message,
+      _subject: "Boat Under Control \u2014 " + service + " (" + name + ")"
+    };
+
+    btn.disabled = true;
+    var originalLabel = btn.textContent;
+    btn.textContent = t.fSending;
+
+    fetch(CONTACT_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    }).then(function(){
+      if(window.gtag){ gtag('event', 'ads_conversion_submit_lead_form'); }
+      msgEl.textContent = t.fOk;
+      msgEl.className = "qform-msg show ok";
+      document.getElementById("quoteForm").reset();
+      (function(){
+        var sel = document.getElementById("fPhoneCode");
+        for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value === "+382"){ sel.selectedIndex = i; break; } }
+      })();
+    }).catch(function(){
+      msgEl.textContent = t.fErr;
+      msgEl.className = "qform-msg show err";
+    }).finally(function(){
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    });
   });
 
   setLanguage(PAGE_LANG);
